@@ -2,7 +2,7 @@
   "cart": {
     "lines": [
       {
-        "id": "gid://shopify/CartLine/1",
+        "id": "gid://shopify/CartLine/12345678901234567890",
         "quantity": 1
       }
     ]

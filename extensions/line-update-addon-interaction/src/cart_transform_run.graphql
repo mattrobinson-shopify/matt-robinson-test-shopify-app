@@ -3,6 +3,11 @@ query CartTransformRunInput {
     lines {
       id
       quantity
+      parentRelationship {
+        parent {
+          id
+        }
+      }
     }
   }
 }

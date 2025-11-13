@@ -1,0 +1,21 @@
+# needed to enable the cart transform function
+# AI agent thought I could do this at
+# https://admin.shopify.com/store/matt-robinson-test/settings/apps/app_installations/app/matt-robinson-test
+# or https://admin.shopify.com/store/matt-robinson-test/settings/checkout, but
+# not true
+mutation {
+  cartTransformCreate(
+    functionHandle: "line-update-addon-interaction"
+    blockOnFailure: false
+  ) {
+    cartTransform {
+      id
+      functionId
+      blockOnFailure
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

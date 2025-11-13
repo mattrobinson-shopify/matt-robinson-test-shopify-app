@@ -5,14 +5,17 @@ import type {
 } from '../generated/api';
 
 export function cartTransformRun(input: CartTransformRunInput): FunctionRunResult {
+  console.error(JSON.stringify({ message: "Function called", cartLines: input.cart.lines.length }));
+
   const operations: Operation[] = [];
 
-  // Check if there is at least one cart line
-  if (input.cart.lines.length > 0) {
-    const firstLine = input.cart.lines[0];
+  // Apply lineUpdate to ALL cart lines
+  for (const line of input.cart.lines) {
+    console.error(JSON.stringify({ message: "Creating lineUpdate operation", lineId: line.id }));
+
     operations.push({
       lineUpdate: {
-        cartLineId: firstLine.id,
+        cartLineId: line.id,
         // Note: lineUpdate doesn't support changing quantity directly
         // You can only modify title, image, and price
         title: "Updated Item (Test)",
@@ -20,6 +23,7 @@ export function cartTransformRun(input: CartTransformRunInput): FunctionRunResul
     });
   }
 
+  console.error(JSON.stringify({ message: "Returning operations", count: operations.length }));
   return { operations };
 }
 
