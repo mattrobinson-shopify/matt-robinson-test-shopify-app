@@ -3,6 +3,17 @@ query CartTransformRunInput {
     lines {
       id
       quantity
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          title
+          product {
+            id
+            title
+          }
+        }
+      }
       parentRelationship {
         parent {
           id
