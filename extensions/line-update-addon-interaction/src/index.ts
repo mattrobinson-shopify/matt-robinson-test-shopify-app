@@ -9,21 +9,110 @@ export function cartTransformRun(input: CartTransformRunInput): FunctionRunResul
 
   const operations: Operation[] = [];
 
-  // Apply lineUpdate to ALL cart lines
-  for (const line of input.cart.lines) {
-    console.error(JSON.stringify({ message: "Creating lineUpdate operation", lineId: line.id }));
+  // Test 1: lineExpand - Expand a single line into multiple child lines (creates parent relationship)
+  // Find a line to expand (look for a line with "expand" in the title or first non-child line)
+  const lineToExpand = input.cart.lines.find(line =>
+    !line.parentRelationship &&
+    line.merchandise.__typename === 'ProductVariant' &&
+    (line.merchandise.title?.toLowerCase().includes('expand') || line.merchandise.title?.toLowerCase().includes('bundle'))
+  );
+
+  if (lineToExpand && lineToExpand.merchandise.__typename === 'ProductVariant') {
+    console.error(JSON.stringify({ message: "Creating lineExpand operation", lineId: lineToExpand.id }));
 
     operations.push({
-      lineUpdate: {
-        cartLineId: line.id,
-        // Note: lineUpdate doesn't support changing quantity directly
-        // You can only modify title, image, and price
-        title: "Updated Item (Test)",
+      lineExpand: {
+        cartLineId: lineToExpand.id,
+        title: "Expanded Bundle",
+        expandedCartItems: [
+          {
+            merchandiseId: lineToExpand.merchandise.id,
+            quantity: 1,
+          },
+          {
+            merchandiseId: lineToExpand.merchandise.id, // Using same variant for testing
+            quantity: 1,
+          }
+        ]
       }
     });
   }
 
-  console.error(JSON.stringify({ message: "Returning operations", count: operations.length }));
+  // Test 2: linesMerge - Merge multiple lines into a single parent (creates parent relationship)
+  // Find lines to merge (look for lines with "merge" in title or take multiple non-child lines)
+  const linesToMerge = input.cart.lines.filter(line =>
+    !line.parentRelationship &&
+    line.merchandise.__typename === 'ProductVariant' &&
+    line.id !== lineToExpand?.id && // Don't merge the line we're expanding
+    (line.merchandise.title?.toLowerCase().includes('merge') || line.merchandise.title?.toLowerCase().includes('component'))
+  );
+
+  if (linesToMerge.length >= 2) {
+    const firstLine = linesToMerge[0];
+    if (firstLine.merchandise.__typename === 'ProductVariant') {
+      console.error(JSON.stringify({
+        message: "Creating linesMerge operation",
+        lineIds: linesToMerge.map(l => l.id)
+      }));
+
+      operations.push({
+        linesMerge: {
+          parentVariantId: firstLine.merchandise.id,
+          title: "Merged Bundle",
+          cartLines: linesToMerge.map(line => ({
+            cartLineId: line.id,
+            quantity: line.quantity
+          }))
+        }
+      });
+    }
+  }
+
+  // Test 3: lineUpdate - Update presentation of lines
+  // Apply to remaining lines, testing behavior with child items
+  for (const line of input.cart.lines) {
+    // Skip lines we're already operating on
+    if (line.id === lineToExpand?.id || linesToMerge.some(l => l.id === line.id)) {
+      continue;
+    }
+
+    // TEST: Try updating child items to see how it interacts with parent relationships
+    if (line.parentRelationship) {
+      console.error(JSON.stringify({
+        message: "TESTING: Attempting lineUpdate on child item with parent relationship",
+        lineId: line.id,
+        parentId: line.parentRelationship.parent.id
+      }));
+
+      operations.push({
+        lineUpdate: {
+          cartLineId: line.id,
+          title: "Updated Child Item (testing parent relationship interaction)",
+        }
+      });
+    } else {
+      console.error(JSON.stringify({ message: "Creating lineUpdate operation", lineId: line.id }));
+
+      operations.push({
+        lineUpdate: {
+          cartLineId: line.id,
+          title: "Updated Item",
+        }
+      });
+    }
+  }
+
+  console.error(JSON.stringify({
+    message: "Returning operations",
+    count: operations.length,
+    operationTypes: operations.map(op => {
+      if (op.lineExpand) return 'expand';
+      if (op.linesMerge) return 'merge';
+      if (op.lineUpdate) return 'update';
+      return 'unknown';
+    })
+  }));
+
   return { operations };
 }
 

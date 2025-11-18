@@ -2,8 +2,74 @@
   "cart": {
     "lines": [
       {
-        "id": "gid://shopify/CartLine/12345678901234567890",
-        "quantity": 1
+        "id": "gid://shopify/CartLine/1",
+        "quantity": 1,
+        "merchandise": {
+          "__typename": "ProductVariant",
+          "id": "gid://shopify/ProductVariant/100",
+          "title": "Bundle Product - Expand Me",
+          "product": {
+            "id": "gid://shopify/Product/10",
+            "title": "Bundle Product"
+          }
+        }
+      },
+      {
+        "id": "gid://shopify/CartLine/2",
+        "quantity": 1,
+        "merchandise": {
+          "__typename": "ProductVariant",
+          "id": "gid://shopify/ProductVariant/200",
+          "title": "Component A - Merge Me",
+          "product": {
+            "id": "gid://shopify/Product/20",
+            "title": "Component A"
+          }
+        }
+      },
+      {
+        "id": "gid://shopify/CartLine/3",
+        "quantity": 1,
+        "merchandise": {
+          "__typename": "ProductVariant",
+          "id": "gid://shopify/ProductVariant/300",
+          "title": "Component B - Merge Me",
+          "product": {
+            "id": "gid://shopify/Product/30",
+            "title": "Component B"
+          }
+        }
+      },
+      {
+        "id": "gid://shopify/CartLine/4",
+        "quantity": 1,
+        "merchandise": {
+          "__typename": "ProductVariant",
+          "id": "gid://shopify/ProductVariant/400",
+          "title": "Regular Product",
+          "product": {
+            "id": "gid://shopify/Product/40",
+            "title": "Regular Product"
+          }
+        }
+      },
+      {
+        "id": "gid://shopify/CartLine/5",
+        "quantity": 1,
+        "parentRelationship": {
+          "parent": {
+            "id": "gid://shopify/CartLine/1"
+          }
+        },
+        "merchandise": {
+          "__typename": "ProductVariant",
+          "id": "gid://shopify/ProductVariant/500",
+          "title": "Child Item with Parent",
+          "product": {
+            "id": "gid://shopify/Product/50",
+            "title": "Child Item"
+          }
+        }
       }
     ]
   }
