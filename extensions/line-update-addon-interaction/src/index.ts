@@ -4,20 +4,31 @@ import type {
   Operation,
 } from '../generated/api';
 
+// TEST CONFIGURATION - Enable/disable operations to test separately
+const TEST_CONFIG = {
+  enableExpand: false,
+  enableMerge: false,
+  enableUpdate: true,  // Set to true to test lineUpdate on child items with parent relationships
+};
+
 export function cartTransformRun(input: CartTransformRunInput): FunctionRunResult {
-  console.error(JSON.stringify({ message: "Function called", cartLines: input.cart.lines.length }));
+  console.error(JSON.stringify({
+    message: "Function called",
+    cartLines: input.cart.lines.length,
+    config: TEST_CONFIG
+  }));
 
   const operations: Operation[] = [];
 
   // Test 1: lineExpand - Expand a single line into multiple child lines (creates parent relationship)
   // Find a line to expand (look for a line with "expand" in the title or first non-child line)
-  const lineToExpand = input.cart.lines.find(line =>
+  const lineToExpand = TEST_CONFIG.enableExpand ? input.cart.lines.find(line =>
     !line.parentRelationship &&
     line.merchandise.__typename === 'ProductVariant' &&
     (line.merchandise.title?.toLowerCase().includes('expand') || line.merchandise.title?.toLowerCase().includes('bundle'))
-  );
+  ) : undefined;
 
-  if (lineToExpand && lineToExpand.merchandise.__typename === 'ProductVariant') {
+  if (TEST_CONFIG.enableExpand && lineToExpand && lineToExpand.merchandise.__typename === 'ProductVariant') {
     console.error(JSON.stringify({ message: "Creating lineExpand operation", lineId: lineToExpand.id }));
 
     operations.push({
@@ -40,14 +51,14 @@ export function cartTransformRun(input: CartTransformRunInput): FunctionRunResul
 
   // Test 2: linesMerge - Merge multiple lines into a single parent (creates parent relationship)
   // Find lines to merge (look for lines with "merge" in title or take multiple non-child lines)
-  const linesToMerge = input.cart.lines.filter(line =>
+  const linesToMerge = TEST_CONFIG.enableMerge ? input.cart.lines.filter(line =>
     !line.parentRelationship &&
     line.merchandise.__typename === 'ProductVariant' &&
     line.id !== lineToExpand?.id && // Don't merge the line we're expanding
     (line.merchandise.title?.toLowerCase().includes('merge') || line.merchandise.title?.toLowerCase().includes('component'))
-  );
+  ) : [];
 
-  if (linesToMerge.length >= 2) {
+  if (TEST_CONFIG.enableMerge && linesToMerge.length >= 2) {
     const firstLine = linesToMerge[0];
     if (firstLine.merchandise.__typename === 'ProductVariant') {
       console.error(JSON.stringify({
@@ -70,7 +81,8 @@ export function cartTransformRun(input: CartTransformRunInput): FunctionRunResul
 
   // Test 3: lineUpdate - Update presentation of lines
   // Apply to remaining lines, testing behavior with child items
-  for (const line of input.cart.lines) {
+  if (TEST_CONFIG.enableUpdate) {
+    for (const line of input.cart.lines) {
     // Skip lines we're already operating on
     if (line.id === lineToExpand?.id || linesToMerge.some(l => l.id === line.id)) {
       continue;
@@ -99,6 +111,7 @@ export function cartTransformRun(input: CartTransformRunInput): FunctionRunResul
           title: "Updated Item",
         }
       });
+    }
     }
   }
 
